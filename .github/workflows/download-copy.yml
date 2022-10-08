@@ -1,0 +1,17 @@
+name: Download a copy of the German Bundestag Lobbyregister daily
+on:
+  schedule:
+    - cron: '0 22 * * *'  # every day at midnight Berlin time
+  workflow_dispatch:
+jobs:
+  download-copy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: wget --content-disposition https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC
+        working-directory: ./data
+      - uses: stefanzweifel/git-auto-commit-action@v4.1.2
+        with:
+            commit_message: Daily Update Bundestag Lobbyregister Data
