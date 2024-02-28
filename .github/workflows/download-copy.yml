@@ -12,7 +12,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           sparse-checkout: |
             .github
-            data/recent
+            ./data/recent
       - run: wget --content-disposition https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC
         working-directory: ./data/recent
       - uses: stefanzweifel/git-auto-commit-action@v5
