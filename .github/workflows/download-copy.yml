@@ -7,7 +7,7 @@ jobs:
   download-copy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - run: wget --content-disposition https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC
