@@ -16,8 +16,10 @@ jobs:
           sparse-checkout: |
             .github
             ./data/recent
+      - run: mkdir -p ./data/recent
       - run: wget --content-disposition https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC
         working-directory: ./data/recent
+      - run: ls -la ./data/recent
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
             disable_globbing: true
