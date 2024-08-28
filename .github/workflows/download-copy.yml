@@ -11,7 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref }}
+          ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
           sparse-checkout: |
             .github
