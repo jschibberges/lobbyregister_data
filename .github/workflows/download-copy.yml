@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    env:
+      TZ: Europe/Berlin
 
     steps:
-      - name: Checkout (sparse)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
-          # Patterns are repo-root relative. No leading "./".
           sparse-checkout: |
             .github
             data/recent
@@ -25,20 +25,21 @@ jobs:
       - name: Ensure folder exists
         run: mkdir -p data/recent
 
-      - name: Download JSON
-        # Give it a deterministic filename (with date).
+      - name: Download + compress JSON (streaming)
         run: |
-          ts="$(date -u +%Y-%m-%d)"
+          ts="$(date +%Y-%m-%d)"
           curl -L -sS \
-            -H 'Accept: application/json' \
             'https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC' \
-            -o "data/recent/lobbyregister_${ts}.json"
-          echo "Saved to data/recent/lobbyregister_${ts}.json"
-          ls -la data/recent
+            | gzip -9 > "data/recent/lobbyregister_${ts}.json.gz"
+          # (optional) checksum for integrity
+          sha256sum "data/recent/lobbyregister_${ts}.json.gz" | tee "data/recent/lobbyregister_${ts}.sha256"
+          ls -lh data/recent
 
-      - name: Commit changes
+      - name: Commit compressed file
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "Daily Update: Bundestag Lobbyregister Data"
+          commit_message: "Daily Update: Bundestag Lobbyregister Data (gzipped)"
           add_options: '--all --force'
-          file_pattern: 'data/recent/*.json'
+          file_pattern: |
+            data/recent/*.json.gz
+            data/recent/*.sha256
