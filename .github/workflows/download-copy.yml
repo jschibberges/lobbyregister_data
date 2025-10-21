@@ -1,26 +1,44 @@
 name: Download a copy of the German Bundestag Lobbyregister daily
+
 on:
   schedule:
-    - cron: '0 22 * * *'  # every day at midnight Berlin time
+    - cron: '0 22 * * *'
   workflow_dispatch:
+
 jobs:
   download-copy:
     runs-on: ubuntu-latest
     permissions:
-       contents: write
+      contents: write
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout (sparse)
+        uses: actions/checkout@v4
         with:
           ref: main
           token: ${{ secrets.GITHUB_TOKEN }}
+          # Patterns are repo-root relative. No leading "./".
           sparse-checkout: |
             .github
-            ./data/recent
-      - run: mkdir -p ./data/recent
-      - run: wget --content-disposition https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC
-        working-directory: ./data/recent
-      - run: ls -la ./data/recent
-      - uses: stefanzweifel/git-auto-commit-action@v5
+            data/recent
+
+      - name: Ensure folder exists
+        run: mkdir -p data/recent
+
+      - name: Download JSON
+        # Give it a deterministic filename (with date).
+        run: |
+          ts="$(date -u +%Y-%m-%d)"
+          curl -L -sS \
+            -H 'Accept: application/json' \
+            'https://www.lobbyregister.bundestag.de/sucheDetailJson?sort=REGISTRATION_DESC' \
+            -o "data/recent/lobbyregister_${ts}.json"
+          echo "Saved to data/recent/lobbyregister_${ts}.json"
+          ls -la data/recent
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v5
         with:
-            disable_globbing: true
-            commit_message: Daily Update Bundestag Lobbyregister Data
+          commit_message: "Daily Update: Bundestag Lobbyregister Data"
+          add_options: '--all --force'
+          file_pattern: 'data/recent/*.json'
